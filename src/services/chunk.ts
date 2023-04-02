@@ -26,7 +26,8 @@ export function getTextChunks(text: string, chunkTokenSize?: number): string[] {
 
   while (tokens.length > 0 && numChunks < MAX_NUM_CHUNKS) {
     const chunk = tokens.slice(0, chunkSize);
-    let chunkText = tokenizer.decode(chunk);
+    const chunkBytes = tokenizer.decode(chunk);
+    let chunkText = new TextDecoder().decode(chunkBytes);
 
     if (!chunkText || chunkText.trim() === "") {
       tokens.splice(0, chunk.length);
@@ -92,7 +93,7 @@ export function createDocumentChunks(
 export async function getDocumentChunks(
   documents: Document[],
   chunkTokenSize?: number
-): Record<string, DocumentChunk[]> {
+): Promise<Record<string, DocumentChunk[]>> {
   const chunks: Record<string, DocumentChunk[]> = {};
   const allChunks: DocumentChunk[] = [];
   documents.forEach((doc) => {
@@ -113,7 +114,7 @@ export async function getDocumentChunks(
       .map((chunk) => chunk.text);
 
     const batchEmbeddings = await getEmbeddings(batchTexts);
-    embeddings.push(...batchEmbeddings);
+    embeddings.push([...batchEmbeddings]);
   }
 
   allChunks.forEach((chunk, i) => {
